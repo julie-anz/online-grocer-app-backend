@@ -87,8 +87,8 @@ router.get('/', (req, res, next) => {
 //get one product
 router.get('/product/:id', (req, res, next) => {
     const conn = app.get('CONNECTION');
-    let sql = `SELECT * FROM products WHERE product_id = ${req.params.id}`;
-    conn.query(sql, (err, result) => {
+    let sql = `SELECT * FROM products WHERE product_id = ?`;
+    conn.query(sql, [req.params.id], (err, result) => {
         if (err) {
             res.json(err)
         } else {
@@ -123,8 +123,8 @@ router.get('/categories/:category_id', (req, res, next) => {
     product_category.category_name 
     FROM products 
     INNER JOIN product_category ON products.category_id = product_category.id
-    WHERE products.category_id = ${req.params.category_id}`;
-    conn.query(sql, (err, result) => {
+    WHERE products.category_id = ?`;
+    conn.query(sql, [req.params.category_id], (err, result) => {
         if (err) {
             res.json(err)
         } else {
@@ -143,8 +143,8 @@ router.post('/add_product', authenticateToken, (req, res, next) => {
     } else {
         const conn = app.get('CONNECTION');
         let sql = `INSERT INTO products(product_name, category_id, price, image) 
-        VALUES('${product_name}', ${category_id}, ${price}, '${image}')`;
-        conn.query(sql, (err, result) => {
+        VALUES(?, ?, ?, ?)`;
+        conn.query(sql, [product_name, category_id, price, image], (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err })
             } else {
@@ -166,12 +166,12 @@ router.put('/update_product', /*authenticateToken,*/ (req, res, next) => {
     } else {
         const conn = app.get('CONNECTION');
         let sql = `UPDATE products 
-                   SET product_name='${product_name}',
-                       category_id=${category_id},
-                       price=${price},
-                       image='${image}'
-                   WHERE product_id= ${product_id}`;
-        conn.query(sql, (err, result) => {
+                   SET product_name= ?,
+                       category_id= ?,
+                       price= ?,
+                       image= ?
+                   WHERE product_id= ?`;
+        conn.query(sql, [product_name, category_id, price, image, product_id], (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err})
             } else {
