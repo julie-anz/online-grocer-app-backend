@@ -49,7 +49,8 @@ db.openDb(app)
 
 
 //upload image (-admin)
-router.post('/upload', (req, res, next) => {
+router.post('/upload', authenticateToken, (req, res, next) => {
+      if(!req.authUser.admin){return res.json({state: 'error', message: 'Unauthorized!'})}
       upload(req, res, (err) => {
         if (err) {
             res.send(err);
@@ -158,8 +159,8 @@ router.post('/add_product', authenticateToken, (req, res, next) => {
 
 
 //update product - for admin only
-router.put('/update_product', /*authenticateToken,*/ (req, res, next) => {
-   // if(!req.authUser.admin){return res.json({state: 'error', message: 'Unauthorized!'})}
+router.put('/update_product', authenticateToken, (req, res, next) => {
+    if(!req.authUser.admin){return res.json({state: 'error', message: 'Unauthorized!'})}
     let { product_id, product_name, category_id, price, image } = req.body;
     if (!product_id || !product_name || !category_id || !price || !image) {
         res.json({ state: 'eror', message: 'missing field input' })
