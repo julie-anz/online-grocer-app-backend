@@ -19,7 +19,10 @@ app.use(express.urlencoded({limit: '200mb', extended: true}));
 //Middleware for logging each request to the API
 app.use((req,res,next) => {
     console.log(`Received a ${req.method} request for ${req.url}`);
-    if (req.body) console.log('req.body:',req.body);
+    if (req.body){
+        const { password, cc_digits, ...safeBody } = req.body; // don't log sensitive info
+        console.log('req.body:', safeBody);
+    }
     if (req.params) console.log('req.params:', req.params);
     if(req.query) console.log('req.query:', req.query);
   next();
