@@ -38,7 +38,7 @@ router.post('/user_cart', authenticateToken, (req, res, next) => {
 
 
 //create new shopping cart
-router.post('/new_cart', (req, res, next) => {
+router.post('/new_cart', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `INSERT INTO shopping_cart(user_id, cart_date ) 
                VALUES (?, CURDATE())`;
@@ -53,7 +53,7 @@ router.post('/new_cart', (req, res, next) => {
 
 
 //add item to cart
-router.post('/add_item', (req, res, next) => {
+router.post('/add_item', authenticateToken, (req, res, next) => {
     let { product_id, quantity, cart_id } = req.body;
     const conn = app.get('CONNECTION');
     let sql = `INSERT INTO cart_item(product_id, quantity, total_price, cart_id)
@@ -69,7 +69,7 @@ router.post('/add_item', (req, res, next) => {
 
 
 //update item quantity
-router.put('/update_item_quantity', (req, res, next) => {
+router.put('/update_item_quantity', authenticateToken, (req, res, next) => {
     let { quantity, item_id } = req.body
     const conn = app.get('CONNECTION');
     let sql = `UPDATE cart_item
@@ -88,7 +88,7 @@ router.put('/update_item_quantity', (req, res, next) => {
 
 
 //delete item from cart
-router.delete('/delete_item/:itemId', (req, res, next) => {
+router.delete('/delete_item/:itemId', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `DELETE FROM cart_item WHERE item_id = ?`
     conn.query(sql, [req.params.itemId], (err, result) => {
@@ -103,7 +103,7 @@ router.delete('/delete_item/:itemId', (req, res, next) => {
 
 
 //delete all cart items
-router.delete('/delete_all/:cartId', (req, res, next) => {
+router.delete('/delete_all/:cartId', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `DELETE FROM cart_item WHERE cart_id = ?`;
     conn.query(sql, [req.params.cartId], (err, result) => {
@@ -116,7 +116,7 @@ router.delete('/delete_all/:cartId', (req, res, next) => {
 })
 
 //get all items of one cart
-router.get('/cart_items/:cartId', (req, res, next) => {
+router.get('/cart_items/:cartId', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `SELECT 
         cart_item.cart_id,
@@ -212,7 +212,7 @@ router.post('/submit', authenticateToken, (req, res, next) => {
 })
 
 //receipt download
-router.post('/receipt', (req, res, next) => {
+router.post('/receipt', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `SELECT products.product_name, 
                       products.price, 
