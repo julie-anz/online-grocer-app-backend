@@ -4,6 +4,7 @@ const app = express();
 const db = require('../db');
 const authenticateToken = require('../token')
 const fs = require('fs');
+const path = require('path');
 
 
 db.openDb(app)
@@ -245,9 +246,9 @@ router.post('/receipt', authenticateToken, (req, res, next) => {
             })
             receipt += `\n  Order Total: ${result[0].cart_price}\n  Payment: CC# XXXX-XXXX-${lastCCDigits}\n  Delivery Date: ${shipDate}\n\n  Thank you for shopping with us!`;
 
-            let filepath = process.cwd() + `\\server\\public\\receipts\\receipt-${result[0].order_id}.txt`
-           fs.writeFile(filepath, receipt, (err) => {
-                if (err) throw err
+            let filepath = path.join(__dirname, '..', 'public', 'receipts', `receipt-${result[0].order_id}.txt`);
+            fs.writeFile(filepath, receipt, (err) => {
+                if (err) console.log('could not save receipt copy:', err.message);
                
             })
 
