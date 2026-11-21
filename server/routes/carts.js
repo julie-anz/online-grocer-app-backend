@@ -184,6 +184,7 @@ router.get('/dates', (req, res, next) => {
 //submit order
 router.post('/submit', authenticateToken, (req, res, next) => {
     let { customer_id, cart_id, shipping_city, shipping_street, shipping_date, cc_digits } = req.body;
+    const lastFour = String(cc_digits).replace(/\D/g, '').slice(-4); // only keep last 4 cc digits
     if (!customer_id || !cart_id || !shipping_city || !shipping_street || !shipping_date || !cc_digits) {
         res.json({ state: 'error', message: 'missing field input' })
     } else {
@@ -198,7 +199,7 @@ router.post('/submit', authenticateToken, (req, res, next) => {
                    cc_digits)
                 SELECT ?, id, (SELECT SUM(total_price) FROM cart_item WHERE cart_id = ?), ?, ?, ?, ?
                 FROM shopping_cart WHERE id = ? AND user_id = ?`;
-        conn.query(sql, [req.authUser.userId, cart_id, shipping_city, shipping_street, shipping_date, cc_digits, cart_id, req.authUser.userId], (err, result) => {
+        conn.query(sql, [req.authUser.userId, cart_id, shipping_city, shipping_street, shipping_date, lastFour, cart_id, req.authUser.userId], (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err })
             } else if (result.affectedRows === 0) {
@@ -237,7 +238,7 @@ router.post('/receipt', authenticateToken, (req, res, next) => {
             let date = new Date(Date.now()).toLocaleString().split(',')[0];
             let shipDate = result[0].shipping_date.toLocaleString().split(',')[0];
             let lastCCDigits = (result[0].cc_digits);
-            lastCCDigits =  lastCCDigits.toString().slice(-4);
+            lastCCDigits =  lastCCDigits.toString().padStart(4, '0').slice(-4);
             let receipt = `\n  Order Number: ${result[0].order_id}  Order Date: ${date}\n\n`
             result.map(item => {
                 receipt += `  item: ${item.product_name}   price: ${item.price}   quantity: ${item.quantity}    total: ${item.total_price} \n`;
