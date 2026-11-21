@@ -3,6 +3,7 @@ const router = express.Router();
 const app = express();
 const db = require('../db');
 const multer = require('multer');
+const path = require('path');
 const authenticateToken = require('../token')
 
 
@@ -16,23 +17,24 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({
-    storage: storage /*,
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
     fileFilter: (req, file, cb) => {
         checkFileType(file, cb);
-    } */
+    }
 }).single('newImage');
 
-/*
+// only allow image files
 function checkFileType(file, cb) {
-    const fileTypes = /jpeg | jpg | png/;
-    const ext = fileTypes.test(path.extname(file.originalname).toLowercase());
-    if (ext) {
-        return cb(null, true)
+    const fileTypes = /^\.(jpe?g|png|gif|webp)$/i;
+    const validExt = fileTypes.test(path.extname(file.originalname));
+    const validType = file.mimetype.startsWith('image/');
+    if (validExt && validType) {
+        return cb(null, true);
     } else {
-        cb('Error: Cannot upload non-image file');
+        cb(new Error('Only image files (jpg, png, gif, webp) can be uploaded'));
     }
 }
-*/
 
 
 
@@ -53,7 +55,7 @@ router.post('/upload', authenticateToken, (req, res, next) => {
       if(!req.authUser.admin){return res.json({state: 'error', message: 'Unauthorized!'})}
       upload(req, res, (err) => {
         if (err) {
-            res.send(err);
+            res.json({ state: 'error', message: err.message });
         } else {
             if (req.file == undefined) {
                 res.json({ message: 'no file selected' });
