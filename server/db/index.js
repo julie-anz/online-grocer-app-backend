@@ -6,10 +6,10 @@ let conn;
 function openDb(app) {
     return new Promise((resolve, reject) => {
         conn = mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: 'password',
-            database: 'market'
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || 'password',
+            database: process.env.DB_NAME || 'market'
         });
 
         conn.connect( err => {
