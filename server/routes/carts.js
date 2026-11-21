@@ -20,9 +20,9 @@ db.openDb(app)
 router.post('/user_cart', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `SELECT * FROM shopping_cart 
-               WHERE user_id = ${req.body.user_id} 
+               WHERE user_id = ? 
                ORDER BY id DESC`;
-    conn.query(sql, (err, result) => {
+    conn.query(sql, [req.body.user_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         }
@@ -41,8 +41,8 @@ router.post('/user_cart', authenticateToken, (req, res, next) => {
 router.post('/new_cart', (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `INSERT INTO shopping_cart(user_id, cart_date ) 
-               VALUES (${req.body.user_id}, CURDATE())`;
-    conn.query(sql, (err, result) => {
+               VALUES (?, CURDATE())`;
+    conn.query(sql, [req.body.user_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -57,8 +57,8 @@ router.post('/add_item', (req, res, next) => {
     let { product_id, quantity, cart_id } = req.body;
     const conn = app.get('CONNECTION');
     let sql = `INSERT INTO cart_item(product_id, quantity, total_price, cart_id)
-               VALUES(${product_id}, ${quantity}, ${quantity}*(SELECT price FROM products WHERE products.product_id=${product_id}), ${cart_id})`;
-    conn.query(sql, (err, result) => {
+               VALUES(?, ?, ?*(SELECT price FROM products WHERE products.product_id=?), ?)`;
+    conn.query(sql, [product_id, quantity, quantity, product_id, cart_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -74,10 +74,10 @@ router.put('/update_item_quantity', (req, res, next) => {
     const conn = app.get('CONNECTION');
     let sql = `UPDATE cart_item
                SET 
-                  quantity = ${quantity},
-                  total_price = ${quantity}*(SELECT price FROM products WHERE products.product_id = cart_item.product_id)
-                  WHERE item_id = ${item_id}`;
-    conn.query(sql, (err, result) => {
+                  quantity = ?,
+                  total_price = ?*(SELECT price FROM products WHERE products.product_id = cart_item.product_id)
+                  WHERE item_id = ?`;
+    conn.query(sql, [quantity, quantity, item_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -90,8 +90,8 @@ router.put('/update_item_quantity', (req, res, next) => {
 //delete item from cart
 router.delete('/delete_item/:itemId', (req, res, next) => {
     const conn = app.get('CONNECTION');
-    let sql = `DELETE FROM cart_item WHERE item_id = ${req.params.itemId}`
-    conn.query(sql, (err, result) => {
+    let sql = `DELETE FROM cart_item WHERE item_id = ?`
+    conn.query(sql, [req.params.itemId], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -105,8 +105,8 @@ router.delete('/delete_item/:itemId', (req, res, next) => {
 //delete all cart items
 router.delete('/delete_all/:cartId', (req, res, next) => {
     const conn = app.get('CONNECTION');
-    let sql = `DELETE FROM cart_item WHERE cart_id = ${req.params.cartId}`;
-    conn.query(sql, (err, result) => {
+    let sql = `DELETE FROM cart_item WHERE cart_id = ?`;
+    conn.query(sql, [req.params.cartId], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -130,8 +130,8 @@ router.get('/cart_items/:cartId', (req, res, next) => {
         FROM cart_item
         INNER JOIN products
         ON  cart_item.product_id = products.product_id 
-        WHERE cart_item.cart_id = ${req.params.cartId}`;
-    conn.query(sql, (err, result) => {
+        WHERE cart_item.cart_id = ?`;
+    conn.query(sql, [req.params.cartId], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -149,8 +149,8 @@ router.get('/cart_items/:cartId', (req, res, next) => {
 //get autofill user info
 router.post('/submit_order/user_info', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
-    let sql = `SELECT first_name, last_name, city, street FROM users WHERE user_id = ${req.authUser.userId} `
-    conn.query(sql, (err, result) => {
+    let sql = `SELECT first_name, last_name, city, street FROM users WHERE user_id = ?`
+    conn.query(sql, [req.authUser.userId], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         }
@@ -194,14 +194,14 @@ router.post('/submit', authenticateToken, (req, res, next) => {
                    shipping_date,
                    cc_digits)
                 VALUES (
-                    ${customer_id},
-                    ${cart_id}, 
-                    (SELECT SUM(total_price) FROM cart_item WHERE cart_id=${cart_id}),
-                    '${shipping_city}', 
-                    '${shipping_street}', 
-                    '${shipping_date}',
-                     ${cc_digits} )`;
-        conn.query(sql, (err, result) => {
+                    ?,
+                    ?, 
+                    (SELECT SUM(total_price) FROM cart_item WHERE cart_id=?),
+                    ?, 
+                    ?, 
+                    ?,
+                    ?)`;
+        conn.query(sql, [customer_id, cart_id, cart_id, shipping_city, shipping_street, shipping_date, cc_digits], (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err })
             } else {
@@ -225,11 +225,11 @@ router.post('/receipt', (req, res, next) => {
                 FROM cart_item
                 INNER JOIN products ON cart_item.product_id = products.product_id
                 INNER JOIN customer_orders ON cart_item.cart_id = customer_orders.cart_id
-                WHERE customer_orders.cart_id =  ${req.body.cart_id}
+                WHERE customer_orders.cart_id =  ?
                 GROUP BY products.product_name
                 ORDER BY products.product_name`;
 
-    conn.query(sql, (err, result) => {
+    conn.query(sql, [req.body.cart_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
