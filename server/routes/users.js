@@ -38,7 +38,7 @@ router.post('/login', async (req, res, next) => {
                             userId: result[0].user_id,
                             admin: result[0].admin
                         },
-                            'secretkey',
+                            authenticateToken.JWT_SECRET,
                             {
                                 expiresIn: '1d'
                             },
