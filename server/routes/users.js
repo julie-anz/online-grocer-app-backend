@@ -25,8 +25,8 @@ router.post('/login', async (req, res, next) => {
         res.json({ state: 'error', message: 'missing field input' })
     } else {
         const conn = app.get('CONNECTION');
-        sql = `SELECT * FROM users WHERE email ='${email}'`;
-        conn.query(sql, async (err, result) => {
+        let sql = `SELECT * FROM users WHERE email = ?`;
+        conn.query(sql, [email], async (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err })
             } else {
@@ -63,8 +63,8 @@ router.post('/login', async (req, res, next) => {
 router.post('/check_if_user', (req, res, next) => {
     let { user_id, email } = req.body
     const conn = app.get('CONNECTION');
-    let sql = `SELECT * FROM users WHERE email= '${email}' OR user_id= ${user_id}`;
-    conn.query(sql, (err, result) => {
+    let sql = `SELECT * FROM users WHERE email = ? OR user_id = ?`;
+    conn.query(sql, [email, user_id], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
@@ -98,16 +98,8 @@ router.post('/register', async (req, res, next) => {
                     password,  
                     city, 
                     street)
-                VALUES(
-                    ${user_id}, 
-                    '${first_name}',
-                    '${last_name}',
-                    '${email}',
-                    '${hashedPassword}',
-                    '${city}',
-                    '${street}'
-                    )`;
-        conn.query(sql, (err, result) => {
+                VALUES(?, ?, ?, ?, ?, ?, ?)`;
+        conn.query(sql, [user_id, first_name, last_name, email, hashedPassword, city, street], (err, result) => {
             if (err) {
                 res.json({ state: 'error', message: err })
             } else {
@@ -154,8 +146,8 @@ router.get('/total_products', (req, res, next) => {
 //get user
 router.post('/user', authenticateToken, (req, res, next) => {
     const conn = app.get('CONNECTION');
-    let sql = `SELECT * FROM users WHERE user_id= ${req.authUser.userId}`; 
-    conn.query(sql, (err, result) => {
+    let sql = `SELECT * FROM users WHERE user_id = ?`;
+    conn.query(sql, [req.authUser.userId], (err, result) => {
         if (err) {
             res.json({ state: 'error', message: err })
         } else {
